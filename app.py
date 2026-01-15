@@ -1,4 +1,4 @@
-   import streamlit as st
+import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 
@@ -23,7 +23,8 @@ if file is not None:
         res_plotted = results[0].plot()
         
         # Displaying the result image with detection boxes
-        st.image(res_plotted, caption='AI Result', use_container_width=True)
+        # channels="BGR" lagaya hai taaki photo neeli na dikhe, sahi laal dikhe
+        st.image(res_plotted, caption='AI Result', use_container_width=True, channels="BGR")
         
         # Success message
         st.success("Identification Complete!")
