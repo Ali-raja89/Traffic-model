@@ -1,30 +1,61 @@
 import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
+import numpy as np
+import cv2
 
 # 1. Page Configuration
 st.set_page_config(page_title="Traffic Sign AI", page_icon="🚦")
 st.title("🚦 Traffic Sign Recognition System")
-st.write("Upload a photo and the AI will identify it!")
+st.write("Upload a traffic sign image to detect it.")
 
-# 2. Loading the Model
-model = YOLO('best.pt')
+# 2. Load Model
+# Using cache to prevent reloading on every interaction
+@st.cache_resource
+def load_model():
+    return YOLO('best.pt')
 
-# 3. Upload Button
-file = st.file_uploader("Upload Traffic Sign Photo", type=['jpg', 'png', 'jpeg'])
+try:
+    model = load_model()
+except Exception as e:
+    st.error(f"Error loading model. Check if 'best.pt' exists. {e}")
 
-if file is not None:
-    img = Image.open(file)
-    st.image(img, caption='Uploaded Photo', use_container_width=True)
+# 3. Upload Image
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-    # 4. AI Prediction
-    with st.spinner('AI is analyzing...'):
-        results = model(img)
+if uploaded_file is not None:
+    # A. Display Original Image
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_container_width=True)
+    
+    st.write("Analyzing...")
+
+    try:
+        # 4. PRE-PROCESSING
+        # Convert PIL Image to NumPy Array (RGB)
+        img_array = np.array(image)
+        
+        # YOLO works best with this format. 
+        results = model(img_array)
+
+        # 5. Result Handling
+        # Get the plotted image (BGR format from YOLO)
         res_plotted = results[0].plot()
         
-        # Displaying the result image with detection boxes
-        # channels="BGR" lagaya hai taaki photo neeli na dikhe, sahi laal dikhe
-        st.image(res_plotted, caption='AI Result', use_container_width=True, channels="BGR")
+        # Convert BGR back to RGB for Streamlit display
+        res_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
         
-        # Success message
-        st.success("Identification Complete!")
+        # 6. Display Result
+        st.success("Analysis Complete!")
+        st.image(res_rgb, caption="AI Detection Result", use_container_width=True)
+
+        # Print detected class name below
+        for result in results:
+            for box in result.boxes:
+                class_id = int(box.cls[0])
+                class_name = model.names[class_id]
+                confidence = float(box.conf[0])
+                st.info(f"Detected: {class_name.upper()} (Confidence: {confidence:.2f})")
+
+    except Exception as e:
+        st.error(f"An error occurred during analysis: {e}")
