@@ -1,40 +1,46 @@
 import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
-import cv2  # Ye sirf color thik karne ke liye hai
+import cv2
 
-# 1. Page Configuration
+# 1. Page Setup
 st.set_page_config(page_title="Traffic Sign AI", page_icon="🚦")
 st.title("🚦 Traffic Sign Recognition System")
-st.write("Upload a photo and the AI will identify it!")
+st.write("Upload a traffic sign image, and the AI will identify it.")
 
-# 2. Loading the Model
-# Cache ka use kiya taaki bar-bar load na ho
+# 2. Load Model (Cached for speed)
 @st.cache_resource
 def load_model():
     return YOLO('best.pt')
 
-model = load_model()
+try:
+    model = load_model()
+except Exception as e:
+    st.error(f"Error loading model: {e}")
 
-# 3. Upload Button
-file = st.file_uploader("Upload Traffic Sign Photo", type=['jpg', 'png', 'jpeg'])
+# 3. Upload Image
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-if file is not None:
-    img = Image.open(file)
-    st.image(img, caption='Uploaded Photo', use_container_width=True)
+if uploaded_file is not None:
+    # Display Original Image
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_container_width=True)
+
+    st.write("Analyzing...")
 
     # 4. AI Prediction
-    with st.spinner('AI is analyzing...'):
-        results = model(img)
+    try:
+        results = model(image)
         
-        # Result ko plot karna
+        # Get the result image with boxes
         res_plotted = results[0].plot()
         
-        # Color Fix: BGR se RGB (Taaki photo neeli na dikhe)
-        res_plotted = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
+        # COLOR FIX: Convert BGR (Blue) to RGB (Red)
+        res_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
         
-        # Displaying the result image with detection boxes
-        st.image(res_plotted, caption='AI Result', use_container_width=True)
+        # 5. Display Result
+        st.success("✅ Detection Complete!")
+        st.image(res_rgb, caption="AI Detection Result", use_container_width=True)
         
-        # Success message
-        st.success("Identification Complete!")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
