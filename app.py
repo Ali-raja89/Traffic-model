@@ -2,23 +2,51 @@ import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 
-st.set_page_config(page_title="Traffic Sign AI", page_icon="🚦")
+# 1. Page Configuration
+st.set_page_config(page_title="Traffic AI", page_icon="🚦")
+
+# 2. Professional Header
 st.title("🚦 Traffic Sign Recognition System")
-st.write("Photo upload kariye aur AI use pehchan lega!")
+st.markdown("---")
+st.write("Welcome! Please upload an image of a traffic sign for real-time AI identification.")
 
-# Model Load ho raha hai
-model = YOLO('best.pt')
+# 3. Load the AI Model
+@st.cache_resource
+def load_model():
+    return YOLO('best.pt')
 
-# Upload Button
-file = st.file_uploader("Upload Traffic Sign Photo", type=['jpg', 'png', 'jpeg'])
+model = load_model()
 
-if file is not None:
-    img = Image.open(file)
-    st.image(img, caption='Aapki Photo', use_container_width=True)
+# 4. Image Upload Section
+uploaded_file = st.file_uploader("Upload Image (JPG, PNG, JPEG)", type=["jpg", "jpeg", "png"])
 
-    # AI Prediction
-    with st.spinner('AI soch raha hai...'):
-        results = model(img)
-        res_plotted = results[0].plot()
-        st.image(res_plotted, caption='AI Result', use_container_width=True)
-        st.success("Pechan liya gaya!")
+if uploaded_file is not None:
+    # Display the uploaded image
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Traffic Sign', use_container_width=True)
+    
+    with st.spinner('AI is analyzing the image... Please wait.'):
+        # AI Prediction
+        results = model(image)
+        
+        st.markdown("### **Detection Results:**")
+        
+        # Checking if any sign is detected
+        detected = False
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                detected = True
+                label = model.names[int(box.cls)]
+                confidence = float(box.conf)
+                
+                # Show success message in English
+                st.success(f"**Sign Detected:** {label.upper()}")
+                st.info(f"**Confidence Score:** {confidence:.2f}")
+
+        if not detected:
+            st.warning("No traffic sign detected in this image. Please try another one.")
+
+# 5. Footer
+st.markdown("---")
+st.caption("Developed with YOLOv8 & Streamlit")
