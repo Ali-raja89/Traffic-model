@@ -1,4 +1,4 @@
-import streamlit as st
+   import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 
@@ -23,8 +23,7 @@ if file is not None:
         res_plotted = results[0].plot()
         
         # Displaying the result image with detection boxes
-        # Note: Agar photo neeli (Blue) dikhe, to niche wali line me channels="BGR" jod dena
-        st.image(res_plotted, caption='AI Result', use_container_width=True, channels="BGR")
+        st.image(res_plotted, caption='AI Result', use_container_width=True)
         
         # Success message
         st.success("Identification Complete!")
