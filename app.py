@@ -2,23 +2,28 @@ import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 
+# 1. Page Configuration
 st.set_page_config(page_title="Traffic Sign AI", page_icon="🚦")
 st.title("🚦 Traffic Sign Recognition System")
-st.write("Photo upload kariye aur AI use pehchan lega!")
+st.write("Upload a photo and the AI will identify it!")
 
-# Model Load ho raha hai
+# 2. Loading the Model
 model = YOLO('best.pt')
 
-# Upload Button
+# 3. Upload Button
 file = st.file_uploader("Upload Traffic Sign Photo", type=['jpg', 'png', 'jpeg'])
 
 if file is not None:
     img = Image.open(file)
-    st.image(img, caption='Aapki Photo', use_container_width=True)
+    st.image(img, caption='Uploaded Photo', use_container_width=True)
 
-    # AI Prediction
-    with st.spinner('AI soch raha hai...'):
+    # 4. AI Prediction
+    with st.spinner('AI is analyzing...'):
         results = model(img)
         res_plotted = results[0].plot()
+        
+        # Displaying the result image with detection boxes
         st.image(res_plotted, caption='AI Result', use_container_width=True)
-        st.success("Pechan liya gaya!")
+        
+        # Success message
+        st.success("Identification Complete!")
