@@ -1,1 +1,1 @@
-AI Traffic Signal Recognition Model
+Intelligent Traffic Sign Recognition System
